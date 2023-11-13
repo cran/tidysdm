@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Troubleshooting models that fail</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Troubleshooting models that fail</h1>
+
+
+
+<p>In this vignette, we illustrate how to troubleshoot tuning errors.
+This is not a comprehensive list (yet), but rather an attempt to
+illustrate how an error can be approached.</p>
+<div id="nas-in-the-data" class="section level1">
+<h1>NAs in the data</h1>
+<p>Most algorithms do not allow NAs. We can generate a problematic
+dataset by loading the <em>Lacerta</em> dataset, and manually add an
+NA:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(tidysdm)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>lacerta_thin <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">system.file</span>(<span class="st">&quot;extdata/lacerta_climate_sf.RDS&quot;</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>  <span class="at">package =</span> <span class="st">&quot;tidysdm&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>))</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>lacerta_thin<span class="sc">$</span>bio05[<span class="dv">37</span>] <span class="ot">&lt;-</span> <span class="cn">NA</span></span></code></pre></div>
+<p>Let us set up a recipe and fit workflow_set</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>lacerta_rec <span class="ot">&lt;-</span> <span class="fu">recipe</span>(lacerta_thin, <span class="at">formula =</span> class <span class="sc">~</span> .) <span class="sc">%&gt;%</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="fu">step_rm</span>(<span class="fu">all_of</span>(<span class="fu">c</span>(</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>    <span class="st">&quot;bio01&quot;</span>, <span class="st">&quot;bio02&quot;</span>, <span class="st">&quot;bio03&quot;</span>, <span class="st">&quot;bio04&quot;</span>, <span class="st">&quot;bio07&quot;</span>, <span class="st">&quot;bio08&quot;</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>    <span class="st">&quot;bio09&quot;</span>, <span class="st">&quot;bio10&quot;</span>, <span class="st">&quot;bio11&quot;</span>, <span class="st">&quot;bio12&quot;</span>, <span class="st">&quot;bio14&quot;</span>, <span class="st">&quot;bio16&quot;</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>    <span class="st">&quot;bio17&quot;</span>, <span class="st">&quot;bio18&quot;</span>, <span class="st">&quot;bio19&quot;</span>, <span class="st">&quot;altitude&quot;</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  )))</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>lacerta_models <span class="ot">&lt;-</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>  <span class="co"># create the workflow_set</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>  <span class="fu">workflow_set</span>(</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>    <span class="at">preproc =</span> <span class="fu">list</span>(<span class="at">default =</span> lacerta_rec),</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>    <span class="at">models =</span> <span class="fu">list</span>(</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>      <span class="co"># the standard glm specs</span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>      <span class="at">glm =</span> <span class="fu">sdm_spec_glm</span>(),</span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>      <span class="co"># rf specs with tuning</span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>      <span class="at">rf =</span> <span class="fu">sdm_spec_rf</span>()</span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>    ),</span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>    <span class="co"># make all combinations of preproc and models,</span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>    <span class="at">cross =</span> <span class="cn">TRUE</span></span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a>  <span class="co"># tweak controls to store information needed later to create the ensemble</span></span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a>  <span class="fu">option_add</span>(<span class="at">control =</span> <span class="fu">control_ensemble_grid</span>())</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">100</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>lacerta_cv <span class="ot">&lt;-</span> <span class="fu">spatial_block_cv</span>(lacerta_thin, <span class="at">v =</span> <span class="dv">5</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>lacerta_models <span class="ot">&lt;-</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  lacerta_models <span class="sc">%&gt;%</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="fu">workflow_map</span>(<span class="st">&quot;tune_grid&quot;</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>    <span class="at">resamples =</span> lacerta_cv, <span class="at">grid =</span> <span class="dv">3</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>    <span class="at">metrics =</span> <span class="fu">sdm_metric_set</span>(), <span class="at">verbose =</span> <span class="cn">TRUE</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  )</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt; i    No tuning parameters. `fit_resamples()` will be attempted</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt; i 1 of 2 resampling: default_glm</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt; ✔ 1 of 2 resampling: default_glm (527ms)</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; i 2 of 2 tuning:     default_rf</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; i Creating pre-processing data to finalize unknown parameter: mtry</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; → A | error:   Missing data in columns: bio05.</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>There were issues with some computations   A<span class="sc">:</span> x1</span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>There were issues with some computations   A<span class="sc">:</span> x4</span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>There were issues with some computations   A<span class="sc">:</span> x7</span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>There were issues with some computations   A<span class="sc">:</span> x10</span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a>There were issues with some computations   A<span class="sc">:</span> x11</span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a></span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a>There were issues with some computations   A<span class="sc">:</span> x12</span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a></span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a>There were issues with some computations   A<span class="sc">:</span> x14</span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a></span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a>There were issues with some computations   A<span class="sc">:</span> x15</span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt; Warning: All models failed. Run `show_notes(.Last.tune.result)` for more information.</span></span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a><span class="co">#&gt; Warning: Unknown or uninitialised column: `.notes`.</span></span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a><span class="co">#&gt; ✖ 2 of 2 tuning:     default_rf failed with</span></span></code></pre></div>
+<p>We can see that the error is self-explanatory. Also, note that the
+error impacts all data splits (technically, <code>rset</code> objects):
+error A is repeated 15 times (5 splits for 3 hyperparameter values).</p>
+<p>Prepping the recipe (which trains it on the dataset) can help
+diagnosing problems:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>lacerta_prep <span class="ot">&lt;-</span> lacerta_rec <span class="sc">%&gt;%</span> <span class="fu">prep</span>(lacerta_thin)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>lacerta_prep</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt; ── Recipe ──────────────────────────────────────────────────────────────────────────────────────────────────────</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; ── Inputs</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt; Number of variables by role</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt; outcome:    1</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt; predictor: 20</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; coords:     2</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; ── Training information</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; Training data contained 452 data points and 1 incomplete row.</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; ── Operations</span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt; • Variables removed: bio01, bio02, bio03, bio04, bio07, bio08, bio09, bio10, bio11, bio12, bio14, ... | Trained</span></span></code></pre></div>
+<p>Note that, in the training information, we were warned that 1 row was
+incomplete. You could use <code>step_naomit</code> to deal with this
+programmatically, or ascertain why you are generating missing data (we
+prefer the latter, as a good SDM pipeline should not generate
+observations, presences or pseudoabsences, with missing data).</p>
+</div>
+<div id="recipes-and-the-response-variable" class="section level1">
+<h1>Recipes and the response variable</h1>
+<p>The response variable is treated in a special way in
+<code>recipes</code>, and this can lead to problems. It is best not to
+manipulate (e.g. transform character into factor) the response variable
+in a recipe, since that response variable will only be available when we
+train and test models, but not when we make projections. If we
+hard-coded a step in a recipe that includes the response variable, the
+model will fit, but then it will fail when we start making
+predictions.</p>
+<p>Another potential mistake is to remove the response variable when
+selecting variables of interest. This can happen if we use
+<code>step_select</code> to choose variables of interest, and the error
+is less than clear:</p>
+<p>Let’s load the data and create a recipe with
+<code>step_select</code>:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>lacerta_thin <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">system.file</span>(<span class="st">&quot;extdata/lacerta_climate_sf.RDS&quot;</span>,</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="at">package =</span> <span class="st">&quot;tidysdm&quot;</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>))</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>suggested_vars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;bio05&quot;</span>, <span class="st">&quot;bio06&quot;</span>, <span class="st">&quot;bio13&quot;</span>, <span class="st">&quot;bio14&quot;</span>, <span class="st">&quot;bio15&quot;</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>lacerta_rec_sel <span class="ot">&lt;-</span> <span class="fu">recipe</span>(lacerta_thin, <span class="at">formula =</span> class <span class="sc">~</span> .) <span class="sc">%&gt;%</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  <span class="fu">step_select</span>(<span class="fu">all_of</span>(suggested_vars))</span></code></pre></div>
+<p>Now we create the workflow set and fit it:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>lacerta_models <span class="ot">&lt;-</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="co"># create the workflow_set</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="fu">workflow_set</span>(</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>    <span class="at">preproc =</span> <span class="fu">list</span>(<span class="at">default =</span> lacerta_rec_sel),</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>    <span class="at">models =</span> <span class="fu">list</span>(</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>      <span class="co"># the standard glm specs</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>      <span class="at">glm =</span> <span class="fu">sdm_spec_glm</span>(),</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>      <span class="co"># rf specs with tuning</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>      <span class="at">rf =</span> <span class="fu">sdm_spec_rf</span>()</span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>    ),</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>    <span class="co"># make all combinations of preproc and models,</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>    <span class="at">cross =</span> <span class="cn">TRUE</span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>  <span class="co"># tweak controls to store information needed later to create the ensemble</span></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a>  <span class="fu">option_add</span>(<span class="at">control =</span> <span class="fu">control_ensemble_grid</span>())</span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">100</span>)</span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a>lacerta_cv <span class="ot">&lt;-</span> <span class="fu">spatial_block_cv</span>(lacerta_thin, <span class="at">v =</span> <span class="dv">5</span>)</span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a>lacerta_models <span class="ot">&lt;-</span></span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a>  lacerta_models <span class="sc">%&gt;%</span></span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a>  <span class="fu">workflow_map</span>(<span class="st">&quot;tune_grid&quot;</span>,</span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a>    <span class="at">resamples =</span> lacerta_cv, <span class="at">grid =</span> <span class="dv">3</span>,</span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a>    <span class="at">metrics =</span> <span class="fu">sdm_metric_set</span>(), <span class="at">verbose =</span> <span class="cn">TRUE</span></span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a>  )</span>
+<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a><span class="co">#&gt; i    No tuning parameters. `fit_resamples()` will be attempted</span></span>
+<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a><span class="co">#&gt; i 1 of 2 resampling: default_glm</span></span>
+<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a><span class="co">#&gt; → A | error:   object &#39;.&#39; not found</span></span>
+<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a>There were issues with some computations   A<span class="sc">:</span> x1</span>
+<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a></span>
+<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a>There were issues with some computations   A<span class="sc">:</span> x4</span>
+<span id="cb6-32"><a href="#cb6-32" tabindex="-1"></a></span>
+<span id="cb6-33"><a href="#cb6-33" tabindex="-1"></a>There were issues with some computations   A<span class="sc">:</span> x5</span>
+<span id="cb6-34"><a href="#cb6-34" tabindex="-1"></a><span class="co">#&gt; Warning: All models failed. Run `show_notes(.Last.tune.result)` for more information.</span></span>
+<span id="cb6-35"><a href="#cb6-35" tabindex="-1"></a><span class="co">#&gt; Warning: Unknown or uninitialised column: `.notes`.</span></span>
+<span id="cb6-36"><a href="#cb6-36" tabindex="-1"></a><span class="co">#&gt; ✖ 1 of 2 resampling: default_glm failed with </span></span>
+<span id="cb6-37"><a href="#cb6-37" tabindex="-1"></a><span class="co">#&gt; i 2 of 2 tuning:     default_rf</span></span>
+<span id="cb6-38"><a href="#cb6-38" tabindex="-1"></a><span class="co">#&gt; i Creating pre-processing data to finalize unknown parameter: mtry</span></span>
+<span id="cb6-39"><a href="#cb6-39" tabindex="-1"></a><span class="co">#&gt; → A | error:   subscript out of bounds</span></span>
+<span id="cb6-40"><a href="#cb6-40" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-41"><a href="#cb6-41" tabindex="-1"></a>There were issues with some computations   A<span class="sc">:</span> x1</span>
+<span id="cb6-42"><a href="#cb6-42" tabindex="-1"></a></span>
+<span id="cb6-43"><a href="#cb6-43" tabindex="-1"></a>There were issues with some computations   A<span class="sc">:</span> x3</span>
+<span id="cb6-44"><a href="#cb6-44" tabindex="-1"></a></span>
+<span id="cb6-45"><a href="#cb6-45" tabindex="-1"></a>There were issues with some computations   A<span class="sc">:</span> x6</span>
+<span id="cb6-46"><a href="#cb6-46" tabindex="-1"></a></span>
+<span id="cb6-47"><a href="#cb6-47" tabindex="-1"></a>There were issues with some computations   A<span class="sc">:</span> x9</span>
+<span id="cb6-48"><a href="#cb6-48" tabindex="-1"></a></span>
+<span id="cb6-49"><a href="#cb6-49" tabindex="-1"></a>There were issues with some computations   A<span class="sc">:</span> x13</span>
+<span id="cb6-50"><a href="#cb6-50" tabindex="-1"></a></span>
+<span id="cb6-51"><a href="#cb6-51" tabindex="-1"></a>There were issues with some computations   A<span class="sc">:</span> x15</span>
+<span id="cb6-52"><a href="#cb6-52" tabindex="-1"></a><span class="co">#&gt; Warning: All models failed. Run `show_notes(.Last.tune.result)` for more information.</span></span>
+<span id="cb6-53"><a href="#cb6-53" tabindex="-1"></a><span class="co">#&gt; Unknown or uninitialised column: `.notes`.</span></span>
+<span id="cb6-54"><a href="#cb6-54" tabindex="-1"></a><span class="co">#&gt; ✖ 2 of 2 tuning:     default_rf failed with</span></span></code></pre></div>
+<p>The errors are not very intuitive. However, all models have failed
+for all algorithms, which suggests that the problem lies with the data
+preparation side (either the data themselves, or what we did with the
+recipe).</p>
+<p>Ideally, you should have already had a look at your data (with
+<code>summary</code> or <code>glimpse</code>). So, in this case, we know
+that the data are fine. Whilst prepping (and sometimes baking) the
+recipe is generally informative for predictor variables, it is hard to
+diagnose problems with the outcome variable in a recipe. Prepping will
+not show anything obvious:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>lacerta_prep_sel <span class="ot">&lt;-</span> lacerta_rec_sel <span class="sc">%&gt;%</span> <span class="fu">prep</span>(lacerta_thin)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>lacerta_prep_sel</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt; ── Recipe ──────────────────────────────────────────────────────────────────────────────────────────────────────</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt; ── Inputs</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt; Number of variables by role</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; outcome:    1</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; predictor: 20</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt; coords:     2</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt; ── Training information</span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt; Training data contained 452 data points and no incomplete rows.</span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt; ── Operations</span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt; • Variables selected: bio05, bio06, bio13, bio14, bio15 | Trained</span></span></code></pre></div>
+<p>In this case, it is a process of exclusion. Everything seems fine,
+but the models don’t work. Then ask yourself if the outcome variable
+might be problematic. As a general rule, we have found it easier to rely
+on <code>step_rm</code> to remove variables (e.g. correlated
+variables).</p>
+</div>
+<div id="using-the-desired-formula-with-gam" class="section level1">
+<h1>Using the desired formula with GAM</h1>
+<p>General Additive Models have an unusual syntax, as the user has to
+define which variables are fitted with splines. <code>tidysdm</code> has
+some functions to simplify this process, assuming that the user just
+wants to fit a standard smooth to every continuous predictor.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>lacerta_thin <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">system.file</span>(<span class="st">&quot;extdata/lacerta_climate_sf.RDS&quot;</span>,</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="at">package =</span> <span class="st">&quot;tidysdm&quot;</span></span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>))</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>lacerta_rec <span class="ot">&lt;-</span> <span class="fu">recipe</span>(lacerta_thin, <span class="at">formula =</span> class <span class="sc">~</span> .) <span class="sc">%&gt;%</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  <span class="fu">step_rm</span>(<span class="fu">all_of</span>(<span class="fu">c</span>(</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>    <span class="st">&quot;bio01&quot;</span>, <span class="st">&quot;bio02&quot;</span>, <span class="st">&quot;bio03&quot;</span>, <span class="st">&quot;bio04&quot;</span>, <span class="st">&quot;bio07&quot;</span>, <span class="st">&quot;bio08&quot;</span>,</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>    <span class="st">&quot;bio09&quot;</span>, <span class="st">&quot;bio10&quot;</span>, <span class="st">&quot;bio11&quot;</span>, <span class="st">&quot;bio12&quot;</span>, <span class="st">&quot;bio14&quot;</span>, <span class="st">&quot;bio16&quot;</span>,</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>    <span class="st">&quot;bio17&quot;</span>, <span class="st">&quot;bio18&quot;</span>, <span class="st">&quot;bio19&quot;</span>, <span class="st">&quot;altitude&quot;</span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>  )))</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>lacerta_models <span class="ot">&lt;-</span></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>  <span class="co"># create the workflow_set</span></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>  <span class="fu">workflow_set</span>(</span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>    <span class="at">preproc =</span> <span class="fu">list</span>(<span class="at">default =</span> lacerta_rec),</span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>    <span class="at">models =</span> <span class="fu">list</span>(</span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>      <span class="co"># the standard glm specs</span></span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>      <span class="at">glm =</span> <span class="fu">sdm_spec_glm</span>(),</span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a>      <span class="co"># the standard gam specs</span></span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>      <span class="at">gam =</span> <span class="fu">sdm_spec_gam</span>()</span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a>    ),</span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>    <span class="co"># make all combinations of preproc and models,</span></span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a>    <span class="at">cross =</span> <span class="cn">TRUE</span></span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a>  <span class="co"># set formula for gams</span></span>
+<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a>  <span class="fu">update_workflow_model</span>(<span class="st">&quot;default_gam&quot;</span>,</span>
+<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a>    <span class="at">spec =</span> <span class="fu">sdm_spec_gam</span>(),</span>
+<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a>    <span class="at">formula =</span> <span class="fu">gam_formula</span>(lacerta_rec)</span>
+<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a>  <span class="co"># tweak controls to store information needed later to create the ensemble</span></span>
+<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a>  <span class="fu">option_add</span>(<span class="at">control =</span> <span class="fu">control_ensemble_grid</span>())</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">100</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>lacerta_cv <span class="ot">&lt;-</span> <span class="fu">spatial_block_cv</span>(lacerta_thin, <span class="at">v =</span> <span class="dv">5</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>lacerta_models <span class="ot">&lt;-</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  lacerta_models <span class="sc">%&gt;%</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  <span class="fu">workflow_map</span>(<span class="st">&quot;tune_grid&quot;</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>    <span class="at">resamples =</span> lacerta_cv, <span class="at">grid =</span> <span class="dv">3</span>,</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>    <span class="at">metrics =</span> <span class="fu">sdm_metric_set</span>(), <span class="at">verbose =</span> <span class="cn">TRUE</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>  )</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="co">#&gt; i    No tuning parameters. `fit_resamples()` will be attempted</span></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a><span class="co">#&gt; i 1 of 2 resampling: default_glm</span></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co">#&gt; ✔ 1 of 2 resampling: default_glm (1s)</span></span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="co">#&gt; i    No tuning parameters. `fit_resamples()` will be attempted</span></span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a><span class="co">#&gt; i 2 of 2 resampling: default_gam</span></span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a><span class="co">#&gt; ✔ 2 of 2 resampling: default_gam (5.3s)</span></span></code></pre></div>
+<p>Note that the step of defining a formula is incompatible with using
+<code>step_cor</code> in a recipe. <code>step_cor</code> removes
+correlated variables in recipes, using a similar algorithm to
+<code>filter_high_cor</code>. However, the algorithm is fitted to each
+data split when cross-validating. This means that different variables
+will eventually be presented to the model when it is fitted for each
+split, leading to an error as there will be a mismatch between the
+formula and the available variables. This is a known issue of how GAMs
+are implemented in <code>tidymodels</code>.</p>
+</div>
+<div id="when-only-some-splits-fail" class="section level1">
+<h1>When only some splits fail</h1>
+<p>In the examples above, all the splits used for cross-validation of a
+given algorithms failed. However, it is also possible that failures
+occur only on some splits for certain algorithms (technically, a
+specific <code>rsplit</code> within certain <code>workflows</code>).
+When this type of problem occurs, it is best to extract the problematic
+workflow, and potentially investigate fitting it to the specific
+<code>rsplit</code>.</p>
+<p>We generate a problematic dataset by subsampling the lacerta
+dataset:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>lacerta_thin <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">system.file</span>(<span class="st">&quot;extdata/lacerta_climate_sf.RDS&quot;</span>,</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  <span class="at">package =</span> <span class="st">&quot;tidysdm&quot;</span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>))</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>lacerta_thin <span class="ot">&lt;-</span> lacerta_thin[<span class="fu">sample</span>(</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>  <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(lacerta_thin),</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>  <span class="fu">nrow</span>(lacerta_thin) <span class="sc">/</span> <span class="dv">5</span></span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>), ]</span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>lacerta_rec <span class="ot">&lt;-</span> <span class="fu">recipe</span>(lacerta_thin, <span class="at">formula =</span> class <span class="sc">~</span> .) <span class="sc">%&gt;%</span></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>  <span class="fu">step_rm</span>(<span class="fu">all_of</span>(<span class="fu">c</span>(</span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a>    <span class="st">&quot;bio01&quot;</span>, <span class="st">&quot;bio02&quot;</span>, <span class="st">&quot;bio03&quot;</span>, <span class="st">&quot;bio04&quot;</span>, <span class="st">&quot;bio07&quot;</span>, <span class="st">&quot;bio08&quot;</span>,</span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a>    <span class="st">&quot;bio09&quot;</span>, <span class="st">&quot;bio10&quot;</span>, <span class="st">&quot;bio11&quot;</span>, <span class="st">&quot;bio12&quot;</span>, <span class="st">&quot;bio14&quot;</span>, <span class="st">&quot;bio16&quot;</span>,</span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>    <span class="st">&quot;bio17&quot;</span>, <span class="st">&quot;bio18&quot;</span>, <span class="st">&quot;bio19&quot;</span>, <span class="st">&quot;altitude&quot;</span></span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a>  )))</span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a></span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a>lacerta_models <span class="ot">&lt;-</span></span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a>  <span class="co"># create the workflow_set</span></span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a>  <span class="fu">workflow_set</span>(</span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a>    <span class="at">preproc =</span> <span class="fu">list</span>(<span class="at">default =</span> lacerta_rec),</span>
+<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a>    <span class="at">models =</span> <span class="fu">list</span>(</span>
+<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a>      <span class="co"># the standard glm specs</span></span>
+<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a>      <span class="at">glm =</span> <span class="fu">sdm_spec_glm</span>(),</span>
+<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a>      <span class="co"># the standard gam specs</span></span>
+<span id="cb10-25"><a href="#cb10-25" tabindex="-1"></a>      <span class="at">gam =</span> <span class="fu">sdm_spec_gam</span>(),</span>
+<span id="cb10-26"><a href="#cb10-26" tabindex="-1"></a>      <span class="co"># rf specs with tuning</span></span>
+<span id="cb10-27"><a href="#cb10-27" tabindex="-1"></a>      <span class="at">rf =</span> <span class="fu">sdm_spec_rf</span>()</span>
+<span id="cb10-28"><a href="#cb10-28" tabindex="-1"></a>    ),</span>
+<span id="cb10-29"><a href="#cb10-29" tabindex="-1"></a>    <span class="co"># make all combinations of preproc and models,</span></span>
+<span id="cb10-30"><a href="#cb10-30" tabindex="-1"></a>    <span class="at">cross =</span> <span class="cn">TRUE</span></span>
+<span id="cb10-31"><a href="#cb10-31" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb10-32"><a href="#cb10-32" tabindex="-1"></a>  <span class="co"># set formula for gams</span></span>
+<span id="cb10-33"><a href="#cb10-33" tabindex="-1"></a>  <span class="fu">update_workflow_model</span>(<span class="st">&quot;default_gam&quot;</span>,</span>
+<span id="cb10-34"><a href="#cb10-34" tabindex="-1"></a>    <span class="at">spec =</span> <span class="fu">sdm_spec_gam</span>(),</span>
+<span id="cb10-35"><a href="#cb10-35" tabindex="-1"></a>    <span class="at">formula =</span> <span class="fu">gam_formula</span>(lacerta_rec)</span>
+<span id="cb10-36"><a href="#cb10-36" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb10-37"><a href="#cb10-37" tabindex="-1"></a>  <span class="co"># tweak controls to store information needed later to create the ensemble</span></span>
+<span id="cb10-38"><a href="#cb10-38" tabindex="-1"></a>  <span class="fu">option_add</span>(<span class="at">control =</span> <span class="fu">control_ensemble_grid</span>())</span></code></pre></div>
+<p>We then create 3 folds and attempt to fit the models:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">100</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>lacerta_cv <span class="ot">&lt;-</span> <span class="fu">spatial_block_cv</span>(lacerta_thin, <span class="at">v =</span> <span class="dv">3</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>lacerta_models <span class="ot">&lt;-</span></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>  lacerta_models <span class="sc">%&gt;%</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>  <span class="fu">workflow_map</span>(<span class="st">&quot;tune_grid&quot;</span>,</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>    <span class="at">resamples =</span> lacerta_cv, <span class="at">grid =</span> <span class="dv">3</span>,</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>    <span class="at">metrics =</span> <span class="fu">sdm_metric_set</span>(), <span class="at">verbose =</span> <span class="cn">TRUE</span></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>  )</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a><span class="co">#&gt; i    No tuning parameters. `fit_resamples()` will be attempted</span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a><span class="co">#&gt; i 1 of 3 resampling: default_glm</span></span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a><span class="co">#&gt; ✔ 1 of 3 resampling: default_glm (453ms)</span></span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a><span class="co">#&gt; i    No tuning parameters. `fit_resamples()` will be attempted</span></span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a><span class="co">#&gt; i 2 of 3 resampling: default_gam</span></span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a><span class="co">#&gt; → A | warning: Fitting terminated with step failure - check results carefully</span></span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a>There were issues with some computations   A<span class="sc">:</span> x1</span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a></span>
+<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a>There were issues with some computations   A<span class="sc">:</span> x1</span>
+<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a><span class="co">#&gt; ✔ 2 of 3 resampling: default_gam (3.7s)</span></span>
+<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a><span class="co">#&gt; i 3 of 3 tuning:     default_rf</span></span>
+<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a><span class="co">#&gt; i Creating pre-processing data to finalize unknown parameter: mtry</span></span>
+<span id="cb11-22"><a href="#cb11-22" tabindex="-1"></a><span class="co">#&gt; ✔ 3 of 3 tuning:     default_rf (979ms)</span></span></code></pre></div>
+<p>We see that one of the folds gives us an error when using GAMs. The
+error (“Fitting terminated with step failure - check results carefully”)
+comes from the gam function in the package <code>mgcv</code>. A quick
+google on StackOverflow[<a href="https://stats.stackexchange.com/questions/576273/gam-model-warning-message-step-failure-in-theta-estimation" class="uri">https://stats.stackexchange.com/questions/576273/gam-model-warning-message-step-failure-in-theta-estimation</a>]
+gives us an idea of where this error comes from.</p>
+<p>We start by extracting the results of the gam fits:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>gam_results <span class="ot">&lt;-</span> <span class="fu">extract_workflow_set_result</span>(lacerta_models, <span class="at">id =</span> <span class="st">&quot;default_gam&quot;</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>gam_results</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="co">#&gt; # Resampling results</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="co">#&gt; # 3-fold spatial block cross-validation </span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 5</span></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="co">#&gt;   splits          id    .metrics         .notes           .predictions     </span></span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="co">#&gt;   &lt;list&gt;          &lt;chr&gt; &lt;list&gt;           &lt;list&gt;           &lt;list&gt;           </span></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="co">#&gt; 1 &lt;split [54/36]&gt; Fold1 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [36 × 5]&gt;</span></span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="co">#&gt; 2 &lt;split [63/27]&gt; Fold2 &lt;tibble [3 × 4]&gt; &lt;tibble [1 × 3]&gt; &lt;tibble [27 × 5]&gt;</span></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="co">#&gt; 3 &lt;split [64/26]&gt; Fold3 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [26 × 5]&gt;</span></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a><span class="co">#&gt; There were issues with some computations:</span></span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="co">#&gt;   - Warning(s) x1: Fitting terminated with step failure - check results carefully</span></span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a><span class="co">#&gt; Run `show_notes(.Last.tune.result)` for more information.</span></span></code></pre></div>
+<p>We see that, in the <code>.notes</code> column, the second item is
+not empty (it does not have zero rows). We can check that it indeed
+contains the error that we wanted:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>gam_results<span class="sc">$</span>.notes[<span class="dv">2</span>]</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="co">#&gt; [[1]]</span></span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="co">#&gt;   location                    type    note                                                          </span></span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                       &lt;chr&gt;   &lt;chr&gt;                                                         </span></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a><span class="co">#&gt; 1 preprocessor 1/1, model 1/1 warning Fitting terminated with step failure - check results carefully</span></span></code></pre></div>
+<p>We can now get the problematic data split, and extract the training
+data:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>problem_split <span class="ot">&lt;-</span> gam_results<span class="sc">$</span>splits[<span class="dv">2</span>][[<span class="dv">1</span>]]</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">training</span>(problem_split))</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a><span class="co">#&gt;        class             geometry      bio01           bio02            bio03           bio04      </span></span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a><span class="co">#&gt;  presence :18   POINT        :63   Min.   : 4.74   Min.   : 6.737   Min.   :34.30   Min.   :341.2  </span></span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a><span class="co">#&gt;  pseudoabs:45   epsg:4326    : 0   1st Qu.:11.81   1st Qu.: 9.336   1st Qu.:39.30   1st Qu.:500.8  </span></span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a><span class="co">#&gt;                 +proj=long...: 0   Median :13.09   Median :10.937   Median :40.55   Median :610.8  </span></span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a><span class="co">#&gt;                                    Mean   :12.88   Mean   :11.052   Mean   :40.54   Mean   :584.6  </span></span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a><span class="co">#&gt;                                    3rd Qu.:14.82   3rd Qu.:12.649   3rd Qu.:42.19   3rd Qu.:656.1  </span></span>
+<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a><span class="co">#&gt;                                    Max.   :17.87   Max.   :14.037   Max.   :46.98   Max.   :756.7  </span></span>
+<span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a><span class="co">#&gt;      bio05           bio06             bio07           bio08            bio09            bio10      </span></span>
+<span id="cb14-11"><a href="#cb14-11" tabindex="-1"></a><span class="co">#&gt;  Min.   :19.90   Min.   :-6.2732   Min.   :16.40   Min.   : 1.922   Min.   : 1.588   Min.   :12.86  </span></span>
+<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a><span class="co">#&gt;  1st Qu.:24.91   1st Qu.:-0.6787   1st Qu.:23.32   1st Qu.: 7.716   1st Qu.:16.995   1st Qu.:18.53  </span></span>
+<span id="cb14-13"><a href="#cb14-13" tabindex="-1"></a><span class="co">#&gt;  Median :28.59   Median : 1.1918   Median :27.88   Median : 9.668   Median :19.828   Median :20.51  </span></span>
+<span id="cb14-14"><a href="#cb14-14" tabindex="-1"></a><span class="co">#&gt;  Mean   :28.57   Mean   : 1.2175   Mean   :27.35   Mean   : 9.450   Mean   :18.938   Mean   :20.48  </span></span>
+<span id="cb14-15"><a href="#cb14-15" tabindex="-1"></a><span class="co">#&gt;  3rd Qu.:32.31   3rd Qu.: 3.5664   3rd Qu.:31.49   3rd Qu.:11.341   3rd Qu.:22.607   3rd Qu.:23.08  </span></span>
+<span id="cb14-16"><a href="#cb14-16" tabindex="-1"></a><span class="co">#&gt;  Max.   :35.31   Max.   : 8.2344   Max.   :35.27   Max.   :16.882   Max.   :25.470   Max.   :25.71  </span></span>
+<span id="cb14-17"><a href="#cb14-17" tabindex="-1"></a><span class="co">#&gt;      bio11            bio12            bio13           bio14           bio15           bio16      </span></span>
+<span id="cb14-18"><a href="#cb14-18" tabindex="-1"></a><span class="co">#&gt;  Min.   :-2.060   Min.   : 249.0   Min.   : 36.0   Min.   : 2.00   Min.   :13.44   Min.   : 96.0  </span></span>
+<span id="cb14-19"><a href="#cb14-19" tabindex="-1"></a><span class="co">#&gt;  1st Qu.: 4.968   1st Qu.: 452.0   1st Qu.: 59.0   1st Qu.: 8.00   1st Qu.:30.07   1st Qu.:157.0  </span></span>
+<span id="cb14-20"><a href="#cb14-20" tabindex="-1"></a><span class="co">#&gt;  Median : 6.236   Median : 628.0   Median : 91.0   Median :17.00   Median :38.97   Median :249.0  </span></span>
+<span id="cb14-21"><a href="#cb14-21" tabindex="-1"></a><span class="co">#&gt;  Mean   : 6.268   Mean   : 757.8   Mean   :101.5   Mean   :21.97   Mean   :41.58   Mean   :280.3  </span></span>
+<span id="cb14-22"><a href="#cb14-22" tabindex="-1"></a><span class="co">#&gt;  3rd Qu.: 8.455   3rd Qu.:1016.5   3rd Qu.:119.0   3rd Qu.:30.50   3rd Qu.:54.30   3rd Qu.:334.0  </span></span>
+<span id="cb14-23"><a href="#cb14-23" tabindex="-1"></a><span class="co">#&gt;  Max.   :11.795   Max.   :1622.0   Max.   :248.0   Max.   :74.00   Max.   :71.59   Max.   :714.0  </span></span>
+<span id="cb14-24"><a href="#cb14-24" tabindex="-1"></a><span class="co">#&gt;      bio17            bio18           bio19          altitude     </span></span>
+<span id="cb14-25"><a href="#cb14-25" tabindex="-1"></a><span class="co">#&gt;  Min.   : 17.00   Min.   : 22.0   Min.   : 68.0   Min.   :  38.0  </span></span>
+<span id="cb14-26"><a href="#cb14-26" tabindex="-1"></a><span class="co">#&gt;  1st Qu.: 43.00   1st Qu.: 47.0   1st Qu.:128.5   1st Qu.: 319.5  </span></span>
+<span id="cb14-27"><a href="#cb14-27" tabindex="-1"></a><span class="co">#&gt;  Median : 71.00   Median : 78.0   Median :225.0   Median : 689.0  </span></span>
+<span id="cb14-28"><a href="#cb14-28" tabindex="-1"></a><span class="co">#&gt;  Mean   : 88.08   Mean   : 96.0   Mean   :252.5   Mean   : 685.5  </span></span>
+<span id="cb14-29"><a href="#cb14-29" tabindex="-1"></a><span class="co">#&gt;  3rd Qu.:109.50   3rd Qu.:117.5   3rd Qu.:319.5   3rd Qu.: 855.0  </span></span>
+<span id="cb14-30"><a href="#cb14-30" tabindex="-1"></a><span class="co">#&gt;  Max.   :253.00   Max.   :253.0   Max.   :714.0   Max.   :1926.0</span></span></code></pre></div>
+<p>In this case, there is nothing too obvious that leads to the error
+(an important check is to make sure that you have enough presences in a
+split; too few presences will generally lead to errors).</p>
+<p>We can now extract the workflow and refit it to the split to confirm
+that we have isolated the problem:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>gam_workflow <span class="ot">&lt;-</span> <span class="fu">extract_workflow</span>(lacerta_models, <span class="at">id =</span> <span class="st">&quot;default_gam&quot;</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>faulty_gam <span class="ot">&lt;-</span> <span class="fu">fit</span>(gam_workflow, <span class="fu">training</span>(problem_split))</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a><span class="co">#&gt; Warning in newton(lsp = lsp, X = G$X, y = G$y, Eb = G$Eb, UrS = G$UrS, L = G$L, : Fitting terminated with step</span></span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a><span class="co">#&gt; failure - check results carefully</span></span></code></pre></div>
+<p>The next step would be to dig deeper into the data, trying to
+understand whether there are some outliers that are problematic. The
+specific steps will depend on the algorithm that is giving problems.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
