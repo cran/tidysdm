@@ -23,6 +23,7 @@ st_crs(lacerta) <- 4326
 
 ## ----land_mask, eval=FALSE----------------------------------------------------
 #  library(pastclim)
+#  download_dataset(dataset = "WorldClim_2.1_10m")
 #  land_mask <-
 #    get_land_mask(time_ce = 1985, dataset = "WorldClim_2.1_10m")
 #  
