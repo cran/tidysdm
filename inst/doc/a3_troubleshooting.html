@@ -49,7 +49,7 @@ overflow: visible;
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -386,21 +386,17 @@ NA:</p>
 <span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  )</span>
 <span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt; i    No tuning parameters. `fit_resamples()` will be attempted</span></span>
 <span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt; i 1 of 2 resampling: default_glm</span></span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt; ✔ 1 of 2 resampling: default_glm (371ms)</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt; ✔ 1 of 2 resampling: default_glm (453ms)</span></span>
 <span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; i 2 of 2 tuning:     default_rf</span></span>
 <span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; i Creating pre-processing data to finalize unknown parameter: mtry</span></span>
 <span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; → A | error:   Missing data in columns: bio05.</span></span>
 <span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; There were issues with some computations   A: x1</span></span>
-<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; There were issues with some computations   A: x3</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; There were issues with some computations   A: x15</span></span>
 <span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; → B | error:   Cannot find current progress bar for `&lt;environment: 0x55e38b24e6a0&gt;`</span></span>
-<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt; Warning: All models failed. Run `show_notes(.Last.tune.result)` for more</span></span>
-<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt; information.</span></span>
-<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt; Error in `map()`:</span></span>
-<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt; ℹ In index: 2.</span></span>
-<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt; Caused by error in `class(x) &lt;- unique.default(c(&quot;AsIs&quot;, oldClass(x)))`:</span></span>
-<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt; ! attempt to set an attribute on NULL</span></span>
-<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt; Execution stopped; returning current results</span></span></code></pre></div>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; Warning: All models failed. Run `show_notes(.Last.tune.result)` for more</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt; information.</span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt; Warning: Unknown or uninitialised column: `.notes`.</span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt; ✖ 2 of 2 tuning:     default_rf failed with</span></span></code></pre></div>
 <p>We can see that the error is self-explanatory. Also, note that the
 error impacts all data splits (technically, <code>rset</code> objects):
 error A is repeated 15 times (5 splits for 3 hyperparameter values).</p>
@@ -480,14 +476,21 @@ is less than clear:</p>
 <span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a><span class="co">#&gt; → A | error:   ! `logistic_reg()` was unable to find an outcome.</span></span>
 <span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a><span class="co">#&gt;                ℹ Ensure that you have specified an outcome column and that it hasn&#39;t been</span></span>
 <span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a><span class="co">#&gt;                  removed in pre-processing.</span></span>
-<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a><span class="co">#&gt; → B | error:   Cannot find current progress bar for `&lt;environment: 0x55e383bd1c90&gt;`</span></span>
-<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a><span class="co">#&gt; Warning: All models failed. Run `show_notes(.Last.tune.result)` for more</span></span>
-<span id="cb6-32"><a href="#cb6-32" tabindex="-1"></a><span class="co">#&gt; information.</span></span>
-<span id="cb6-33"><a href="#cb6-33" tabindex="-1"></a><span class="co">#&gt; Error in `map()`:</span></span>
-<span id="cb6-34"><a href="#cb6-34" tabindex="-1"></a><span class="co">#&gt; ℹ In index: 2.</span></span>
-<span id="cb6-35"><a href="#cb6-35" tabindex="-1"></a><span class="co">#&gt; Caused by error in `class(x) &lt;- unique.default(c(&quot;AsIs&quot;, oldClass(x)))`:</span></span>
-<span id="cb6-36"><a href="#cb6-36" tabindex="-1"></a><span class="co">#&gt; ! attempt to set an attribute on NULL</span></span>
-<span id="cb6-37"><a href="#cb6-37" tabindex="-1"></a><span class="co">#&gt; Execution stopped; returning current results</span></span></code></pre></div>
+<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a><span class="co">#&gt; There were issues with some computations   A: x1</span></span>
+<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a><span class="co">#&gt; There were issues with some computations   A: x5</span></span>
+<span id="cb6-32"><a href="#cb6-32" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-33"><a href="#cb6-33" tabindex="-1"></a><span class="co">#&gt; Warning: All models failed. Run `show_notes(.Last.tune.result)` for more</span></span>
+<span id="cb6-34"><a href="#cb6-34" tabindex="-1"></a><span class="co">#&gt; information.</span></span>
+<span id="cb6-35"><a href="#cb6-35" tabindex="-1"></a><span class="co">#&gt; Warning: Unknown or uninitialised column: `.notes`.</span></span>
+<span id="cb6-36"><a href="#cb6-36" tabindex="-1"></a><span class="co">#&gt; ✖ 1 of 2 resampling: default_glm failed with</span></span>
+<span id="cb6-37"><a href="#cb6-37" tabindex="-1"></a><span class="co">#&gt; i 2 of 2 tuning:     default_rf</span></span>
+<span id="cb6-38"><a href="#cb6-38" tabindex="-1"></a><span class="co">#&gt; i Creating pre-processing data to finalize unknown parameter: mtry</span></span>
+<span id="cb6-39"><a href="#cb6-39" tabindex="-1"></a><span class="co">#&gt; → A | error:   ! `rand_forest()` was unable to find an outcome.</span></span>
+<span id="cb6-40"><a href="#cb6-40" tabindex="-1"></a><span class="co">#&gt;                ℹ Ensure that you have specified an outcome column and that it hasn&#39;t been</span></span>
+<span id="cb6-41"><a href="#cb6-41" tabindex="-1"></a><span class="co">#&gt;                  removed in pre-processing.</span></span>
+<span id="cb6-42"><a href="#cb6-42" tabindex="-1"></a><span class="co">#&gt; Warning: All models failed. Run `show_notes(.Last.tune.result)` for more information.</span></span>
+<span id="cb6-43"><a href="#cb6-43" tabindex="-1"></a><span class="co">#&gt; Unknown or uninitialised column: `.notes`.</span></span>
+<span id="cb6-44"><a href="#cb6-44" tabindex="-1"></a><span class="co">#&gt; ✖ 2 of 2 tuning:     default_rf failed with</span></span></code></pre></div>
 <p>The errors are not very intuitive. However, all models have failed
 for all algorithms, which suggests that the problem lies with the data
 preparation side (either the data themselves, or what we did with the
@@ -567,19 +570,20 @@ wants to fit a standard smooth to every continuous predictor.</p>
 <span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>  )</span>
 <span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="co">#&gt; i    No tuning parameters. `fit_resamples()` will be attempted</span></span>
 <span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a><span class="co">#&gt; i 1 of 2 resampling: default_glm</span></span>
-<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co">#&gt; ✔ 1 of 2 resampling: default_glm (379ms)</span></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co">#&gt; ✔ 1 of 2 resampling: default_glm (333ms)</span></span>
 <span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="co">#&gt; i    No tuning parameters. `fit_resamples()` will be attempted</span></span>
 <span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a><span class="co">#&gt; i 2 of 2 resampling: default_gam</span></span>
 <span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a><span class="co">#&gt; ✔ 2 of 2 resampling: default_gam (2.1s)</span></span></code></pre></div>
 <p>Note that the step of defining a formula is incompatible with using
 <code>step_cor</code> in a recipe. <code>step_cor</code> removes
 correlated variables in recipes, using a similar algorithm to
-<code>filter_high_cor</code>. However, the algorithm is fitted to each
-data split when cross-validating. This means that different variables
-will eventually be presented to the model when it is fitted for each
-split, leading to an error as there will be a mismatch between the
-formula and the available variables. This is a known issue of how GAMs
-are implemented in <code>tidymodels</code>.</p>
+<code>filter_collinear</code> using method <code>cor_caret</code>.
+However, the algorithm is fitted to each data split when
+cross-validating. This means that different variables will eventually be
+presented to the model when it is fitted for each split, leading to an
+error as there will be a mismatch between the formula and the available
+variables. This is a known issue of how GAMs are implemented in
+<code>tidymodels</code>.</p>
 </div>
 <div id="when-only-some-splits-fail" class="section level1">
 <h1>When only some splits fail</h1>
@@ -641,17 +645,17 @@ dataset:</p>
 <span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>  )</span>
 <span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a><span class="co">#&gt; i    No tuning parameters. `fit_resamples()` will be attempted</span></span>
 <span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a><span class="co">#&gt; i 1 of 3 resampling: default_glm</span></span>
-<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a><span class="co">#&gt; ✔ 1 of 3 resampling: default_glm (285ms)</span></span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a><span class="co">#&gt; ✔ 1 of 3 resampling: default_glm (259ms)</span></span>
 <span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a><span class="co">#&gt; i    No tuning parameters. `fit_resamples()` will be attempted</span></span>
 <span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a><span class="co">#&gt; i 2 of 3 resampling: default_gam</span></span>
 <span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a><span class="co">#&gt; → A | warning: Fitting terminated with step failure - check results carefully</span></span>
 <span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a><span class="co">#&gt; There were issues with some computations   A: x1</span></span>
 <span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a><span class="co">#&gt; There were issues with some computations   A: x1</span></span>
 <span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a><span class="co">#&gt; ✔ 2 of 3 resampling: default_gam (2.4s)</span></span>
+<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a><span class="co">#&gt; ✔ 2 of 3 resampling: default_gam (2.5s)</span></span>
 <span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a><span class="co">#&gt; i 3 of 3 tuning:     default_rf</span></span>
 <span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a><span class="co">#&gt; i Creating pre-processing data to finalize unknown parameter: mtry</span></span>
-<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a><span class="co">#&gt; ✔ 3 of 3 tuning:     default_rf (710ms)</span></span></code></pre></div>
+<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a><span class="co">#&gt; ✔ 3 of 3 tuning:     default_rf (789ms)</span></span></code></pre></div>
 <p>We see that one of the folds gives us an error when using GAMs. The
 error (“Fitting terminated with step failure - check results carefully”)
 comes from the gam function in the package <code>mgcv</code>. A quick

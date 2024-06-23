@@ -2,7 +2,7 @@
 % Please edit documentation in R/maxent.R
 \name{maxent}
 \alias{maxent}
-\title{Maxent model}
+\title{MaxEnt model}
 \usage{
 maxent(
   mode = "classification",
@@ -24,12 +24,12 @@ to use for fitting. Currently only "maxnet" is available.}
 \item{regularization_multiplier}{numeric, a constant to adjust regularization}
 }
 \value{
-a \code{\link{model_spec}} for a \code{maxent} model
+a \code{\link[parsnip:model_spec]{parsnip::model_spec}} for a \code{maxent} model
 }
 \description{
-\link{maxent} defines a MaxEnt model for binary outcomes as used in Species
+\code{maxent} defines the MaxEnt model as used in Species
 Distribution Models.
-A good guide to how options of a Maxent model work can be found in
+A good guide to how options of a MaxEnt model work can be found in
 https://onlinelibrary.wiley.com/doi/full/10.1111/j.1600-0587.2013.07872.x
 }
 \examples{

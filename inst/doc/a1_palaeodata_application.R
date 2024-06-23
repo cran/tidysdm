@@ -7,7 +7,7 @@ knitr::opts_chunk$set(
 options(cores=2)
 options(mc.cores=2)
 # xgboost uses data.table
-data.table::setDTthreads(1)
+data.table::setDTthreads(2)
 
 ## -----------------------------------------------------------------------------
 library(tidysdm)
@@ -37,7 +37,6 @@ land_mask <- mask(land_mask, europe_poly)
 library(tidyterra)
 ggplot() +
   geom_spatraster(data = land_mask, aes(fill = land_mask_0)) +
-  scale_fill_terrain_c() +
   geom_sf(data = horses, aes(col = time_bp))
 
 ## ----thin_by_dist-------------------------------------------------------------
@@ -53,7 +52,6 @@ nrow(horses)
 ## ----plot_thinned, fig.width=6, fig.height=4----------------------------------
 ggplot() +
   geom_spatraster(data = land_mask, aes(fill = land_mask_0)) +
-  scale_fill_terrain_c() +
   geom_sf(data = horses, aes(col = time_bp))
 
 ## ----load_climate-------------------------------------------------------------
@@ -77,7 +75,6 @@ nrow(horses)
 ## ----fig.width=6, fig.height=4------------------------------------------------
 ggplot() +
   geom_spatraster(data = land_mask, aes(fill = land_mask_0)) +
-  scale_fill_terrain_c() +
   geom_sf(data = horses, aes(col = time_bp))
 
 ## -----------------------------------------------------------------------------
@@ -93,7 +90,6 @@ horses <- sample_pseudoabs_time(horses,
 ## ----fig.width=6, fig.height=4------------------------------------------------
 ggplot() +
   geom_spatraster(data = land_mask, aes(fill = land_mask_0)) +
-  scale_fill_terrain_c() +
   geom_sf(data = horses, aes(col = class))
 
 ## ----climate_for_locations----------------------------------------------------

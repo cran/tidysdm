@@ -7,14 +7,25 @@ knitr::opts_chunk$set(
 options(cores=2)
 options(mc.cores=2)
 # xgboost uses data.table
-data.table::setDTthreads(1)
+data.table::setDTthreads(2)
 
 ## ----libraries----------------------------------------------------------------
 library(tidysdm)
 
 ## ----load_presences-----------------------------------------------------------
-data(lacerta)
-lacerta
+ data(lacerta)
+ lacerta
+
+## ----download_presences, eval = FALSE-----------------------------------------
+#  # download presences
+#  library(rgbif)
+#  occ_download_get(key = "0068808-230530130749713", path = tempdir())
+#  # read file
+#  library(readr)
+#  distrib <- read_delim(file.path(tempdir(), "0068808-230530130749713.zip"))
+#  # keep the necessary columns and rename them
+#  lacerta <- distrib %>% select(gbifID, decimalLatitude, decimalLongitude) %>%
+#    rename(ID = gbifID, latitude = decimalLatitude, longitude = decimalLongitude)
 
 ## ----cast_to_sf---------------------------------------------------------------
 library(sf)
@@ -59,7 +70,8 @@ library(tidyterra)
 library(ggplot2)
 ggplot() +
   geom_spatraster(data = land_mask, aes(fill = land_mask_1985)) +
-  geom_sf(data = lacerta)
+  geom_sf(data = lacerta) + scale_fill_gradient(na.value = "transparent")
+
 
 ## ----thin_by_cell-------------------------------------------------------------
 set.seed(1234567)
@@ -69,7 +81,7 @@ nrow(lacerta)
 ## ----plot_thin_by_cell, fig.width=6, fig.height=4-----------------------------
 ggplot() +
   geom_spatraster(data = land_mask, aes(fill = land_mask_1985)) +
-  geom_sf(data = lacerta)
+  geom_sf(data = lacerta) + scale_fill_gradient(na.value = "transparent")
 
 ## ----thin_by_dist-------------------------------------------------------------
 set.seed(1234567)
@@ -79,20 +91,48 @@ nrow(lacerta_thin)
 ## ----plot_thin_by_dist, fig.width=6, fig.height=4-----------------------------
 ggplot() +
   geom_spatraster(data = land_mask, aes(fill = land_mask_1985)) +
-  geom_sf(data = lacerta_thin)
+  geom_sf(data = lacerta_thin) + scale_fill_gradient(na.value = "transparent")
 
-## ----sample_pseudoabs---------------------------------------------------------
+## ----download_background, eval=FALSE------------------------------------------
+#  # download presences
+#  library(rgbif)
+#  # download file
+#  occ_download_get(key = "0121761-240321170329656", path = tempdir())
+#  # read file
+#  library(readr)
+#  backg_distrib <- readr::read_delim(file.path(tempdir(), "0121761-240321170329656.zip"))
+#  
+#  # keep the necessary columns
+#  lacertidae_background <- backg_distrib %>% select(gbifID, decimalLatitude, decimalLongitude) %>%
+#    rename(ID = gbifID, latitude = decimalLatitude, longitude = decimalLongitude)
+#  
+#  lacertidae_background <- st_as_sf(lacertidae_background, coords = c("longitude", "latitude"))
+#  st_crs(lacertidae_background) <- 4326
+
+## ----echo=FALSE---------------------------------------------------------------
+data("lacertidae_background")
+lacertidae_background <- st_as_sf(lacertidae_background, coords = c("longitude", "latitude"))
+st_crs(lacertidae_background) <- 4326
+
+## ----background_to_raster-----------------------------------------------------
+lacertidae_background_raster <- rasterize(lacertidae_background, land_mask, fun = "count")
+
+plot(lacertidae_background_raster)
+
+
+## ----sample_background--------------------------------------------------------
 set.seed(1234567)
-lacerta_thin <- sample_pseudoabs(lacerta_thin,
-  n = 3 * nrow(lacerta_thin),
-  raster = land_mask,
-  method = c("dist_min", km2m(50))
-)
+lacerta_thin <- sample_background(data = lacerta_thin, raster = lacertidae_background_raster,
+                  n = 3 * nrow(lacerta_thin),
+                  method = "bias",
+                  class_label = "background",
+                  return_pres = TRUE)
+
 
 ## ----plot_sample_pseudoabs, fig.width=6, fig.height=4-------------------------
 ggplot() +
   geom_spatraster(data = land_mask, aes(fill = land_mask_1985)) +
-  geom_sf(data = lacerta_thin, aes(col = class))
+  geom_sf(data = lacerta_thin, aes(col = class)) + scale_fill_gradient(na.value = "transparent")
 
 ## ----load_climate, eval=FALSE-------------------------------------------------
 #  climate_vars <- get_vars_for_dataset("WorldClim_2.1_10m")
@@ -125,26 +165,24 @@ lacerta_thin %>% plot_pres_vs_bg(class)
 ## -----------------------------------------------------------------------------
 lacerta_thin %>% dist_pres_vs_bg(class)
 
-## -----------------------------------------------------------------------------
-vars_to_keep <- lacerta_thin %>% dist_pres_vs_bg(class)
-vars_to_keep <- names(vars_to_keep[vars_to_keep > 0.30])
-lacerta_thin <- lacerta_thin %>% select(all_of(c(vars_to_keep, "class")))
-vars_to_keep
-
 ## ----climate_variables--------------------------------------------------------
-suggested_vars <- c("bio05", "bio06", "bio13", "bio14", "bio15")
+
+suggested_vars <- c("bio06", "bio05", "bio13", "bio14", "bio15")
 
 ## ----fig.width=7, fig.height=8------------------------------------------------
 pairs(climate_present[[suggested_vars]])
 
+
 ## ----choose_var_cor_keep------------------------------------------------------
 climate_present <- climate_present[[suggested_vars]]
-vars_uncor <- filter_high_cor(climate_present, cutoff = 0.7)
+
+vars_uncor <- filter_collinear(climate_present, cutoff = 0.7, method = "cor_caret")
 vars_uncor
 
 ## -----------------------------------------------------------------------------
 lacerta_thin <- lacerta_thin %>% select(all_of(c(vars_uncor, "class")))
 climate_present <- climate_present[[vars_uncor]]
+names(climate_present) # added to highlight which variables are retained in the end
 
 ## ----recipe-------------------------------------------------------------------
 lacerta_rec <- recipe(lacerta_thin, formula = class ~ .)
@@ -177,7 +215,9 @@ lacerta_models <-
 ## ----training_cv, fig.width=6, fig.height=4-----------------------------------
 library(tidysdm)
 set.seed(100)
-lacerta_cv <- spatial_block_cv(lacerta_thin, v = 5)
+#lacerta_cv <- spatial_block_cv(lacerta_thin, v = 5)
+
+lacerta_cv <- spatial_block_cv(data = lacerta_thin, v = 3, n = 5)
 autoplot(lacerta_cv)
 
 ## ----tune_grid----------------------------------------------------------------
@@ -197,6 +237,7 @@ lacerta_ensemble <- simple_ensemble() %>%
   add_member(lacerta_models, metric = "boyce_cont")
 lacerta_ensemble
 
+
 ## ----autoplot_ens, fig.width=7, fig.height=4----------------------------------
 autoplot(lacerta_ensemble)
 
@@ -212,8 +253,9 @@ ggplot() +
   geom_sf(data = lacerta_thin %>% filter(class == "presence"))
 
 ## ----plot_present_best, fig.width=6, fig.height=4-----------------------------
+
 prediction_present_boyce <- predict_raster(lacerta_ensemble, climate_present,
-  metric_thresh = c("boyce_cont", 0.8),
+  metric_thresh = c("boyce_cont", 0.7),
   fun = "median"
 )
 ggplot() +
@@ -223,14 +265,16 @@ ggplot() +
 
 ## -----------------------------------------------------------------------------
 lacerta_ensemble <- calib_class_thresh(lacerta_ensemble,
-  class_thresh = "tss_max"
+  class_thresh = "tss_max", 
+  metric_thresh = c("boyce_cont", 0.7)
 )
 
 ## ----fig.width=6, fig.height=4------------------------------------------------
 prediction_present_binary <- predict_raster(lacerta_ensemble,
   climate_present,
   type = "class",
-  class_thresh = c("tss_max")
+  class_thresh = c("tss_max"), 
+  metric_thresh = c("boyce_cont", 0.7)
 )
 ggplot() +
   geom_spatraster(data = prediction_present_binary, aes(fill = binary_mean)) +
@@ -271,6 +315,39 @@ prediction_future <- predict_raster(lacerta_ensemble, climate_future)
 ggplot() +
   geom_spatraster(data = prediction_future, aes(fill = mean)) +
   scale_fill_terrain_c()
+
+## -----------------------------------------------------------------------------
+climate_future_clamped <- clamp_predictors(climate_future, 
+                                           training = lacerta_thin,
+                                           .col= class)
+prediction_future_clamped <- predict_raster(lacerta_ensemble, 
+                                            raster = climate_future_clamped)
+
+ggplot() +
+  geom_spatraster(data = prediction_future_clamped, aes(fill = mean)) +
+  scale_fill_terrain_c()
+
+## -----------------------------------------------------------------------------
+lacerta_mess_future <- extrapol_mess(x = climate_future, 
+                                      training = lacerta_thin, 
+                                      .col = "class")
+
+ggplot() + geom_spatraster(data = lacerta_mess_future) + 
+  scale_fill_viridis_b(na.value = "transparent")
+
+## -----------------------------------------------------------------------------
+# subset mess 
+lacerta_mess_future_subset <- lacerta_mess_future
+lacerta_mess_future_subset[lacerta_mess_future_subset >= 0] <- NA
+lacerta_mess_future_subset[lacerta_mess_future_subset < 0] <- 1
+
+# convert into polygon
+lacerta_mess_future_subset <- as.polygons(lacerta_mess_future_subset)
+
+# plot as a mask 
+ggplot() + geom_spatraster(data = prediction_future) + 
+  scale_fill_viridis_b(na.value = "transparent") + geom_sf(data = lacerta_mess_future_subset, fill= "lightgray", alpha = 0.5, linewidth = 0.5)
+
 
 ## -----------------------------------------------------------------------------
 bio05_prof <- lacerta_rec %>%
